@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>CCF Mini-Scale — Monitoring &amp; MRV</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFFFFF; --panel:#FFFFFF; --panel-2:#F2FAF5;
+    --line:#E4F0E8; --line-soft:#EEF6F1;
+    --text:#122019; --text-muted:#5C7568; --text-dim:#93A79C;
+    --amber:#D98C3D; --amber-dim:#FBEEDD;
+    --teal:#0FA968; --teal-dim:#E1F6EC;
+    --red:#DB6B57; --red-dim:#FBEAE5;
+    --blue:#4C8BE0; --blue-dim:#E8F0FD;
+    --grad: linear-gradient(135deg, #34D399 0%, #0D9D63 100%);
+    --shadow: 0 1px 2px rgba(16,40,28,.04), 0 8px 24px -12px rgba(16,90,60,.14);
+    --shadow-sm: 0 1px 2px rgba(16,40,28,.05);
+    --radius: 18px; --radius-sm: 12px;
+    --font-display:'Fraunces', Georgia, serif;
+    --font-mono:'Manrope', system-ui, sans-serif;
+    --font-body:'Manrope', system-ui, sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{ background:var(--bg); color:var(--text); font-family:var(--font-body); width:100%; min-height:100vh; }
+  a{ color:inherit; }
+  ::selection{ background:var(--teal-dim); }
+
+  /* ============ LANDING ============ */
+  #landing{
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:64px 24px; text-align:center; position:relative; overflow:hidden;
+  }
+  #landing::before{
+    content:''; position:absolute; inset:0; z-index:-1;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(52,211,153,0.16), transparent 42%),
+      radial-gradient(circle at 88% 18%, rgba(15,169,104,0.10), transparent 45%),
+      radial-gradient(circle at 50% 95%, rgba(15,169,104,0.08), transparent 50%);
+    pointer-events:none;
+  }
+  .kicker{ font-family:var(--font-body); font-size:13px; font-weight:600; letter-spacing:.01em; color:var(--teal); margin-bottom:20px; }
+  #landing h1{ font-family:var(--font-display); font-size:46px; font-weight:600; letter-spacing:-0.01em; max-width:760px; line-height:1.18; color:var(--text); }
+  #landing h1 em{ font-style:italic; color:var(--teal); }
+  #landing .desc{ max-width:560px; color:var(--text-muted); font-size:16px; line-height:1.65; margin:22px 0 40px; }
+  .specrow{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-bottom:44px; max-width:820px; }
+  .speccard{ background:var(--panel-2); border-radius:var(--radius-sm); padding:18px 22px; min-width:150px; text-align:left; }
+  .speccard .v{ font-size:24px; font-weight:800; color:var(--text); letter-spacing:-0.01em; }
+  .speccard .l{ font-size:12px; color:var(--text-muted); margin-top:4px; }
+  .enter-btn{
+    background:var(--grad); color:#fff; border:none; border-radius:100px; font-family:var(--font-body); font-weight:700;
+    font-size:16px; padding:15px 34px; cursor:pointer; box-shadow:0 10px 24px -8px rgba(13,157,99,.45);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .enter-btn:hover{ transform:translateY(-1px); box-shadow:0 14px 28px -8px rgba(13,157,99,.55); }
+  .landing-foot{ margin-top:34px; font-size:12.5px; color:var(--text-dim); max-width:520px; line-height:1.6; }
+
+
+  /* ============ APP SHELL ============ */
+  #app{ display:none; }
+  body{ padding:0 0 60px; }
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 24px; }
+
+  .appbar{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:18px 24px; margin-bottom:0;
+    position:sticky; top:0; background:rgba(255,255,255,.88); backdrop-filter:blur(10px); z-index:10;
+    border-bottom:1px solid var(--line);
+  }
+  .appbar .brand{ font-weight:800; font-size:15.5px; display:flex; align-items:center; gap:9px; }
+  .appbar .brand .dotmark{ width:9px; height:9px; background:var(--grad); border-radius:50%; }
+  .navtabs{ display:flex; gap:4px; background:var(--panel-2); padding:4px; border-radius:100px; }
+  .navtab{
+    background:none; border:none; color:var(--text-muted);
+    font-family:var(--font-body); font-weight:600; font-size:13px; padding:8px 16px; cursor:pointer; border-radius:100px;
+    transition:all .15s ease;
+  }
+  .navtab.active{ background:#fff; color:var(--teal); box-shadow:var(--shadow-sm); }
+  .backlink{ font-size:13px; color:var(--text-dim); cursor:pointer; }
+  .backlink:hover{ color:var(--text-muted); }
+
+  .page{ display:none; padding-top:28px; }
+  .page.active{ display:block; }
+
+  .config-bar{ background:var(--panel-2); border-radius:var(--radius); padding:16px 18px; margin-bottom:20px; display:flex; flex-direction:column; gap:12px; font-size:13px; }
+  .config-bar label{ color:var(--text-muted); }
+  .config-bar input{ background:#fff; border:1px solid var(--line); border-radius:8px; color:var(--text); font-family:var(--font-body); font-size:13px; padding:7px 10px; width:120px; }
+  .config-bar button{ background:var(--text); border:none; border-radius:100px; color:#fff; font-family:var(--font-body); font-weight:600; font-size:12.5px; padding:8px 16px; cursor:pointer; }
+  .mode-btn{ background:#fff; border:1px solid var(--line); color:var(--text-muted); font-family:var(--font-body); font-weight:600; font-size:12.5px; padding:8px 14px; cursor:pointer; border-radius:100px; }
+  .mode-btn.active{ background:var(--teal-dim); border-color:var(--teal-dim); color:var(--teal); }
+  .radio-row{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+  .radio-row label{ color:var(--text); display:flex; align-items:center; gap:4px; }
+
+  .status{ display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:600; padding:7px 13px; border-radius:100px; }
+  .status.live{ color:var(--teal); background:var(--teal-dim); }
+  .status.demo{ color:var(--amber); background:var(--amber-dim); }
+  .dot{ width:6px; height:6px; border-radius:50%; background:currentColor; animation:pulse 2s infinite; }
+  @keyframes pulse{ 0%{box-shadow:0 0 0 0 rgba(15,169,104,.45);} 70%{box-shadow:0 0 0 6px rgba(15,169,104,0);} 100%{box-shadow:0 0 0 0 rgba(15,169,104,0);} }
+
+  h2.sect{ font-family:var(--font-display); font-size:20px; font-weight:600; margin:34px 0 14px; color:var(--text); }
+  h2.sect:first-child{ margin-top:0; }
+
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .grid3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+  @media (max-width:860px){ .grid2,.grid3{ grid-template-columns:1fr; } }
+
+  .panel{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); margin-bottom:16px; box-shadow:var(--shadow-sm); overflow:hidden; }
+  .panel-head{ display:flex; justify-content:space-between; align-items:center; padding:14px 18px; border-bottom:1px solid var(--line-soft); }
+  .panel-head .t{ font-weight:700; font-size:13.5px; color:var(--text); }
+  .panel-head .t2{ font-size:12px; color:var(--text-dim); }
+  .panel-body{ padding:18px; }
+
+  .stat{ border-radius:var(--radius-sm); padding:16px 18px; background:var(--panel-2); }
+  .stat .lbl{ font-size:12px; color:var(--text-muted); margin-bottom:8px; }
+  .stat .num{ font-size:24px; font-weight:800; color:var(--text); line-height:1; letter-spacing:-0.01em; }
+  .stat .unit{ font-size:12px; font-weight:600; color:var(--text-muted); margin-left:3px; }
+  .stat .sub{ font-size:11.5px; color:var(--text-dim); margin-top:8px; }
+  .bar-track{ margin-top:12px; height:6px; background:#fff; border-radius:6px; position:relative; overflow:hidden; }
+  .bar-fill{ position:absolute; left:0; top:0; bottom:0; background:var(--grad); border-radius:6px; transition:width .6s ease; }
+
+  svg text{ font-family:var(--font-body); }
+  .badge rect{ fill:var(--panel-2); stroke:none; }
+  .badge .val{ font-size:15px; font-weight:800; fill:var(--text); }
+  .badge .lbl{ font-size:8.5px; fill:var(--text-dim); }
+  .pipe{ stroke:var(--line); stroke-width:2.5; fill:none; }
+  .r-label{ fill:var(--text-muted); font-size:9.5px; }
+  .valve-lbl{ font-size:8.5px; font-weight:700; }
+
+  table{ width:100%; border-collapse:collapse; }
+  th{ text-align:left; font-size:11.5px; color:var(--text-dim); font-weight:600; padding:10px 18px; border-bottom:1px solid var(--line-soft); }
+  td{ font-size:13px; padding:10px 18px; color:var(--text-muted); border-bottom:1px solid var(--line-soft); }
+  td.num{ color:var(--text); font-weight:600; }
+  tr:last-child td{ border-bottom:none; }
+  .pill{ display:inline-block; padding:3px 10px; font-size:11px; font-weight:600; border-radius:100px; }
+  .pill.ok{ color:var(--teal); background:var(--teal-dim); }
+  .pill.warn{ color:var(--amber); background:var(--amber-dim); }
+  .pill.bed{ font-weight:700; }
+  .pill.A{ color:var(--teal); background:var(--teal-dim); }
+  .pill.B{ color:var(--amber); background:var(--amber-dim); }
+
+  .note-box{ background:var(--panel-2); border-radius:var(--radius-sm); padding:16px 18px; font-size:13px; color:var(--text-muted); line-height:1.6; }
+  .note-box b{ color:var(--text); }
+
+  footer{ margin-top:28px; padding-top:18px; border-top:1px solid var(--line); font-size:12px; color:var(--text-dim); line-height:1.6; }
+  footer b{ color:var(--text-muted); }
+  .empty-note{ padding:26px; text-align:center; color:var(--text-dim); font-size:13px; }
+
+  .btn-primary{ background:var(--grad); border:none; border-radius:100px; color:#fff; font-weight:700; font-size:13px; padding:11px 20px; cursor:pointer; box-shadow:0 8px 18px -8px rgba(13,157,99,.4); }
+  .btn-primary:hover{ opacity:.92; }
+
+  @media print{
+    #landing, .appbar, .config-bar, #tab-monitoring, #tab-verification { display:none !important; }
+    body{ background:#fff; color:#000; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= LANDING PAGE ================= -->
+<div id="landing">
+  <div class="kicker">CCF Mini-Scale · Carbon capture untuk boiler industri</div>
+  <h1>Menangkap karbon dari boiler,<br><em>terverifikasi</em> secara real-time</h1>
+  <div class="desc">
+    Unit PVSA twin-bed dua train paralel berbasis karbon aktif tempurung kelapa, dipasang pada gas buang boiler batu bara — untuk pabrik tekstil, makanan-minuman, karet, dan kayu.
+  </div>
+  <div class="specrow">
+    <div class="speccard"><div class="v">2 × Twin-Bed</div><div class="l">Arsitektur multi-train</div></div>
+    <div class="speccard"><div class="v">85%</div><div class="l">Target efisiensi tangkap</div></div>
+    <div class="speccard"><div class="v">~7.497 t</div><div class="l">CO2 per tahun</div></div>
+    <div class="speccard"><div class="v">95–96%</div><div class="l">Kemurnian CO2 hasil</div></div>
+  </div>
+  <button class="enter-btn" onclick="enterApp()">Masuk ke program →</button>
+  <div class="landing-foot">Acuan desain: boiler chain grate 4 ton uap/jam, gas buang 180°C, ~12.000 m³/jam pada konsentrasi CO2 ~70.000 ppm.</div>
+</div>
+
+<!-- ================= APP SHELL ================= -->
+<div id="app">
+  <div class="appbar">
+    <div class="brand"><span class="dotmark"></span> CCF Mini-Scale</div>
+    <div class="navtabs">
+      <button class="navtab active" id="navMonitoring" onclick="showPage('monitoring')">Monitoring</button>
+      <button class="navtab" id="navReporting" onclick="showPage('reporting')">Pelaporan</button>
+      <button class="navtab" id="navVerification" onclick="showPage('verification')">Verifikasi</button>
+    </div>
+    <div class="backlink" onclick="backToLanding()">← Beranda</div>
+  </div>
+
+  <div class="wrap">
+
+    <div class="config-bar">
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="mode-btn active" id="modeBtnDemo" onclick="setMode('demo')">Simulasi otomatis</button>
+        <button class="mode-btn" id="modeBtnManual" onclick="setMode('manual')">Input manual</button>
+        <button class="mode-btn" id="modeBtnTs" onclick="setMode('thingspeak')">ThingSpeak (sensor asli)</button>
+      </div>
+      <div id="manualControls" style="display:none; gap:12px; flex-wrap:wrap; align-items:center;">
+        <label>Train 1: CO2 masuk</label><input id="m1in" type="number" value="70000">
+        <label>keluar</label><input id="m1out" type="number" value="10500">
+        <div class="radio-row"><label><input type="radio" name="m1bed" value="A" checked>Bed A1</label><label><input type="radio" name="m1bed" value="B">Bed B1</label></div>
+        <label style="margin-left:10px;">Train 2: masuk</label><input id="m2in" type="number" value="70000">
+        <label>keluar</label><input id="m2out" type="number" value="11200">
+        <div class="radio-row"><label><input type="radio" name="m2bed" value="A" checked>Bed A2</label><label><input type="radio" name="m2bed" value="B">Bed B2</label></div>
+        <button onclick="addManualPoint()">+ Tambah data</button>
+      </div>
+      <div id="tsControls" style="display:none; gap:12px; flex-wrap:wrap; align-items:center;">
+        <label>Channel ID</label><input id="cfgChannel" placeholder="mis. 2812345">
+        <label>Read API Key</label><input id="cfgKey" placeholder="opsional">
+        <button onclick="applyConfig()">Sambungkan</button>
+        <span style="color:var(--text-dim);">field1–3 = Train 1 (masuk, keluar, bed) · field4–6 = Train 2</span>
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:flex-end; margin-bottom:16px;">
+      <div class="status demo" id="statusBadge"><span class="dot"></span><span id="statusText">SIMULASI OTOMATIS</span></div>
+    </div>
+
+    <!-- ============ TAB: MONITORING ============ -->
+    <div class="page active" id="tab-monitoring">
+      <h2 class="sect">Ringkasan sistem</h2>
+      <div class="grid3">
+        <div class="stat"><div class="lbl">CO2 tertangkap · laju</div><div class="num" id="sysRate">—<span class="unit">kg/jam</span></div><div class="sub" id="sysRateRef">acuan desain: 1.249,5 kg/jam</div></div>
+        <div class="stat"><div class="lbl">Efisiensi sistem rata-rata</div><div class="num" id="sysEff">—<span class="unit">%</span></div><div class="bar-track"><div class="bar-fill" id="sysEffBar" style="width:0%"></div></div></div>
+        <div class="stat"><div class="lbl">CO2 tertangkap · sesi ini</div><div class="num" id="sysCum">0<span class="unit">kg</span></div><div class="sub">terhitung sejak dashboard dibuka</div></div>
+      </div>
+
+      <h2 class="sect">Dua train paralel</h2>
+      <div class="panel">
+        <div class="panel-body">
+          <svg id="schemSvg" viewBox="0 0 620 300" width="100%" height="auto"></svg>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="panel">
+          <div class="panel-head"><span class="t">Train 1</span><span class="t2" id="t1BedTag">—</span></div>
+          <div class="panel-body" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="stat"><div class="lbl">CO2 masuk</div><div class="num" id="t1in">—<span class="unit">ppm</span></div></div>
+            <div class="stat"><div class="lbl">CO2 keluar</div><div class="num" id="t1out">—<span class="unit">ppm</span></div></div>
+            <div class="stat" style="grid-column:1/-1;"><div class="lbl">Efisiensi</div><div class="num" id="t1eff">—<span class="unit">%</span></div></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><span class="t">Train 2</span><span class="t2" id="t2BedTag">—</span></div>
+          <div class="panel-body" style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div class="stat"><div class="lbl">CO2 masuk</div><div class="num" id="t2in">—<span class="unit">ppm</span></div></div>
+            <div class="stat"><div class="lbl">CO2 keluar</div><div class="num" id="t2out">—<span class="unit">ppm</span></div></div>
+            <div class="stat" style="grid-column:1/-1;"><div class="lbl">Efisiensi</div><div class="num" id="t2eff">—<span class="unit">%</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <h2 class="sect">Penyimpanan CO2 bersama</h2>
+      <div class="grid3">
+        <div class="stat"><div class="lbl">Level pengisian tangki</div><div class="num" id="tankLevel">—<span class="unit">%</span></div><div class="bar-track"><div class="bar-fill" id="tankBar" style="width:0%"></div></div></div>
+        <div class="stat"><div class="lbl">Tekanan · simulasi</div><div class="num" id="tankPressure">—<span class="unit">bar</span></div><div class="sub">kapasitas desain: 20 bar, ~71,5 m³</div></div>
+        <div class="stat"><div class="lbl">Estimasi sampai penuh</div><div class="num" id="tankEta">—<span class="unit">jam</span></div><div class="sub">acuan: ~2 jam produksi penuh</div></div>
+      </div>
+
+      <h2 class="sect">Tren CO2 gabungan</h2>
+      <div class="panel">
+        <div class="panel-body">
+          <div style="display:flex; gap:16px; margin-bottom:12px; font-size:12px; color:var(--text-muted); font-weight:600;">
+            <span><i style="display:inline-block;width:10px;height:3px;border-radius:2px;background:var(--red);"></i> Total masuk</span>
+            <span><i style="display:inline-block;width:10px;height:3px;border-radius:2px;background:var(--teal);"></i> Total keluar</span>
+          </div>
+          <svg id="chartSvg" viewBox="0 0 1100 240" width="100%" height="auto"></svg>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><span class="t">Log pembacaan</span><span class="t2">10 data terakhir</span></div>
+        <table>
+          <thead><tr><th>Waktu</th><th>Bed T1</th><th>Bed T2</th><th>Masuk total</th><th>Keluar total</th><th>η sistem</th></tr></thead>
+          <tbody id="logBody"><tr><td colspan="6" class="empty-note">Menunggu data…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ============ TAB: REPORTING (MRV) ============ -->
+    <div class="page" id="tab-reporting">
+      <h2 class="sect">Pelaporan karbon</h2>
+      <div class="note-box" style="margin-bottom:16px;">
+        Angka di halaman ini dari sesi berjalan, bukan arsip historis. Pelaporan resmi berkala perlu data tersimpan di server, bukan hanya di memori browser.
+      </div>
+
+      <div class="grid3">
+        <div class="stat"><div class="lbl">Total CO2 tertangkap · sesi ini</div><div class="num" id="repCum">0<span class="unit">kg</span></div></div>
+        <div class="stat"><div class="lbl">Proyeksi tahunan · 6.000 jam</div><div class="num" id="repAnnual">—<span class="unit">ton/thn</span></div><div class="sub">acuan desain: ~7.497 ton/tahun</div></div>
+        <div class="stat"><div class="lbl">Rata-rata efisiensi tangkap</div><div class="num" id="repEff">—<span class="unit">%</span></div><div class="sub">target desain: 85%</div></div>
+      </div>
+
+      <h2 class="sect">Kepatuhan baku mutu emisi</h2>
+      <div class="panel"><div class="panel-body">
+        <table>
+          <tr><th style="width:60%">Acuan regulasi</th><th>Status</th></tr>
+          <tr><td>Permen LH No. 7/2007 — baku mutu emisi ketel uap batu bara</td><td id="complianceStatus"><span class="pill ok">Dalam pemantauan</span></td></tr>
+        </table>
+        <div class="note-box" style="margin-top:12px;">Dashboard ini memantau performa tangkap CO2, bukan baku mutu cerobong penuh (partikulat, SOx, NOx). Kepatuhan penuh tetap perlu pengukuran terpisah sesuai Permen LH No. 7/2007.</div>
+      </div></div>
+
+      <h2 class="sect">Estimasi nilai ekonomi karbon</h2>
+      <div class="grid2">
+        <div class="stat">
+          <div class="lbl">Pajak karbon · tarif minimum Rp30.000/ton</div>
+          <div class="num" id="repTaxValue">Rp —</div>
+          <div class="sub">dari proyeksi tahunan sesi ini</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">Bursa karbon · rata-rata ~Rp52.295/ton</div>
+          <div class="num" id="repMarketValue">Rp —</div>
+          <div class="sub">ilustratif, tergantung hasil verifikasi unit</div>
+        </div>
+      </div>
+
+      <div style="margin-top:22px; display:flex; gap:10px;">
+        <button class="btn-primary" onclick="window.print()">Cetak / simpan sebagai PDF</button>
+      </div>
+    </div>
+
+    <!-- ============ TAB: VERIFICATION ============ -->
+    <div class="page" id="tab-verification">
+      <h2 class="sect">Verifikasi silang sensor</h2>
+      <div class="note-box" style="margin-bottom:16px;">
+        Tiap titik ukur idealnya punya sensor primer + redundan yang saling memvalidasi. Pembacaan redundan di bawah <b>disimulasikan</b> untuk menunjukkan cara kerjanya — unit sungguhan diisi sensor fisik kedua.
+      </div>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Titik ukur</th><th>Sensor primer</th><th>Sensor redundan</th><th>Deviasi</th><th>Status</th></tr></thead>
+          <tbody id="verifyBody"><tr><td colspan="5" class="empty-note">Menunggu data…</td></tr></tbody>
+        </table>
+      </div>
+
+      <h2 class="sect">Log audit data</h2>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Waktu</th><th>ID rekaman</th><th>Bed T1</th><th>Bed T2</th><th>Status verifikasi</th></tr></thead>
+          <tbody id="auditBody"><tr><td colspan="5" class="empty-note">Menunggu data…</td></tr></tbody>
+        </table>
+      </div>
+      <div class="note-box">
+        ID rekaman dibuat dengan hash sederhana di sisi klien sebagai <b>contoh konsep</b> jejak audit. Untuk MRV yang kredibel, hash ini semestinya dibuat dan disimpan di server atau ledger terverifikasi.
+      </div>
+    </div>
+
+    <footer>
+      <b>Catatan skala:</b> laju tangkap CO2 memakai asumsi ~6.000 m³/jam per train (total ~12.000 m³/jam) dan massa jenis CO2 ~1,75 kg/m³ setelah pendinginan gas — estimasi rekayasa, bukan pengukuran langsung. MRV presisi perlu flow meter aktual, bukan asumsi tetap.
+    </footer>
+  </div>
+</div>
+
+<script>
+(function(){
+  var CHANNEL_ID="", READ_KEY="", POLL_MS=16000, pollTimer=null;
+  var history=[]; // {t,time,t1in,t1out,t1bed,t2in,t2out,t2bed,switched1,switched2}
+  var maxPoints=60;
+  var mode='demo';
+  var cumulativeKg=0;
+  var lastTickTime=null;
+
+  var FLOW_PER_TRAIN=6000; // m3/jam
+  var CO2_DENSITY=1.75; // kg/m3 (setelah pendinginan gas)
+  var TANK_CAPACITY_KG = 1249.5 * 2; // ~2 jam produksi penuh setara kapasitas desain
+  var ANNUAL_HOURS = 6000;
+  var TAX_PRICE = 30000; // Rp/ton
+  var MARKET_PRICE = 52295; // Rp/ton
+
+  // ---------------- demo simulation ----------------
+  var demoT=0;
+  var bed1='A', bed1T=0, bed2='A', bed2T=0;
+  function demoTick(){
+    demoT+=1; bed1T+=1; bed2T+=1;
+    var baseIn = 70000;
+    function trainSim(bedT){
+      var cin = baseIn + Math.sin(demoT/9)*4500 + (Math.random()-0.5)*2200;
+      cin = Math.max(31300, cin);
+      var eff0=0.87, decay=Math.exp(-bedT/24);
+      var eff = Math.max(0.10, eff0*decay) + (Math.random()-0.5)*0.02;
+      var cout = cin*(1-eff);
+      return {cin:cin, cout:cout};
+    }
+    var s1=trainSim(bed1T), s2=trainSim(bed2T);
+    var switched1=false, switched2=false;
+    if(s1.cout/s1.cin > 0.5 && bed1T>8){ bed1=(bed1==='A')?'B':'A'; bed1T=0; switched1=true; }
+    if(s2.cout/s2.cin > 0.5 && bed2T>8){ bed2=(bed2==='A')?'B':'A'; bed2T=0; switched2=true; }
+
+    pushRecord(s1.cin, s1.cout, bed1, s2.cin, s2.cout, bed2, switched1, switched2, 1.8);
+  }
+
+  function pushRecord(t1in,t1out,bed1v,t2in,t2out,bed2v,sw1,sw2,seconds){
+    var now = new Date();
+    history.push({t:history.length, time:now.toISOString(), t1in:t1in,t1out:t1out,t1bed:bed1v, t2in:t2in,t2out:t2out,t2bed:bed2v, switched1:sw1, switched2:sw2});
+    if(history.length>maxPoints) history.shift();
+    var rate1 = Math.max(0,(t1in-t1out))*1e-6*FLOW_PER_TRAIN*CO2_DENSITY; // kg/jam
+    var rate2 = Math.max(0,(t2in-t2out))*1e-6*FLOW_PER_TRAIN*CO2_DENSITY;
+    var totalRateKgH = rate1+rate2;
+    cumulativeKg += totalRateKgH * (seconds/3600);
+    renderAll(totalRateKgH);
+  }
+
+  // ---------------- manual ----------------
+  function addManualPoint(){
+    var t1in=parseFloat(document.getElementById('m1in').value);
+    var t1out=parseFloat(document.getElementById('m1out').value);
+    var t2in=parseFloat(document.getElementById('m2in').value);
+    var t2out=parseFloat(document.getElementById('m2out').value);
+    var bed1v=document.querySelector('input[name="m1bed"]:checked').value;
+    var bed2v=document.querySelector('input[name="m2bed"]:checked').value;
+    if([t1in,t1out,t2in,t2out].some(function(v){return isNaN(v)||v<0;})){ alert('Isi semua angka ppm dengan benar.'); return; }
+    var prev = history.length?history[history.length-1]:null;
+    var sw1 = prev ? (prev.t1bed!==bed1v) : false;
+    var sw2 = prev ? (prev.t2bed!==bed2v) : false;
+    pushRecord(t1in,t1out,bed1v,t2in,t2out,bed2v,sw1,sw2,10);
+  }
+
+  // ---------------- thingspeak ----------------
+  function applyConfig(){
+    CHANNEL_ID=document.getElementById('cfgChannel').value.trim();
+    READ_KEY=document.getElementById('cfgKey').value.trim();
+    history=[]; cumulativeKg=0;
+    if(pollTimer) clearInterval(pollTimer);
+    if(CHANNEL_ID){ fetchThingSpeak(); pollTimer=setInterval(fetchThingSpeak, POLL_MS); }
+    else setStatus(false,"Isi Channel ID dulu");
+  }
+  async function fetchThingSpeak(){
+    try{
+      var url='https://api.thingspeak.com/channels/'+encodeURIComponent(CHANNEL_ID)+'/feeds.json?results='+maxPoints;
+      if(READ_KEY) url+='&api_key='+encodeURIComponent(READ_KEY);
+      var res=await fetch(url);
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      var data=await res.json();
+      var feeds=(data.feeds||[]).filter(function(f){return f.field1!==null && f.field2!==null && f.field4!==null && f.field5!==null;});
+      if(feeds.length===0){ setStatus(false,"Channel tersambung, belum ada data valid"); return; }
+      history=[]; cumulativeKg=0;
+      var prevBed1=null, prevBed2=null;
+      feeds.forEach(function(f,idx){
+        var bed1v=(parseFloat(f.field3)===1)?'B':'A';
+        var bed2v=(parseFloat(f.field6)===1)?'B':'A';
+        var sw1=(prevBed1!==null && prevBed1!==bed1v);
+        var sw2=(prevBed2!==null && prevBed2!==bed2v);
+        prevBed1=bed1v; prevBed2=bed2v;
+        var t1in=parseFloat(f.field1), t1out=parseFloat(f.field2);
+        var t2in=parseFloat(f.field4), t2out=parseFloat(f.field5);
+        history.push({t:idx, time:f.created_at, t1in:t1in,t1out:t1out,t1bed:bed1v, t2in:t2in,t2out:t2out,t2bed:bed2v, switched1:sw1, switched2:sw2});
+        var rate1=Math.max(0,(t1in-t1out))*1e-6*FLOW_PER_TRAIN*CO2_DENSITY;
+        var rate2=Math.max(0,(t2in-t2out))*1e-6*FLOW_PER_TRAIN*CO2_DENSITY;
+        cumulativeKg += (rate1+rate2)*(16/3600);
+      });
+      setStatus(true, "LIVE — channel "+CHANNEL_ID);
+      var latest=history[history.length-1];
+      var rate1=Math.max(0,(latest.t1in-latest.t1out))*1e-6*FLOW_PER_TRAIN*CO2_DENSITY;
+      var rate2=Math.max(0,(latest.t2in-latest.t2out))*1e-6*FLOW_PER_TRAIN*CO2_DENSITY;
+      renderAll(rate1+rate2);
+    }catch(err){ setStatus(false, "Gagal ambil data ("+err.message+")"); }
+  }
+
+  // ---------------- mode / nav ----------------
+  function setMode(newMode){
+    mode=newMode;
+    if(pollTimer) clearInterval(pollTimer);
+    ['Demo','Manual','Ts'].forEach(function(m){ document.getElementById('modeBtn'+m).classList.remove('active'); });
+    document.getElementById('manualControls').style.display='none';
+    document.getElementById('tsControls').style.display='none';
+    history=[]; cumulativeKg=0; demoT=0; bed1T=0; bed2T=0; bed1='A'; bed2='A';
+
+    if(newMode==='demo'){
+      document.getElementById('modeBtnDemo').classList.add('active');
+      setStatus(false,"SIMULASI OTOMATIS");
+      for(var i=0;i<10;i++) demoTick();
+      pollTimer=setInterval(demoTick,1800);
+    } else if(newMode==='manual'){
+      document.getElementById('modeBtnManual').classList.add('active');
+      document.getElementById('manualControls').style.display='flex';
+      setStatus(false,"INPUT MANUAL");
+      document.getElementById('logBody').innerHTML='<tr><td colspan="6" class="empty-note">Isi angka lalu klik "Tambah data"</td></tr>';
+    } else if(newMode==='thingspeak'){
+      document.getElementById('modeBtnTs').classList.add('active');
+      document.getElementById('tsControls').style.display='flex';
+      setStatus(false,"Isi Channel ID lalu klik Sambungkan");
+    }
+  }
+  function setStatus(live,text){
+    var b=document.getElementById('statusBadge');
+    b.className='status '+(live?'live':'demo');
+    document.getElementById('statusText').textContent=text;
+  }
+
+  function showPage(name){
+    ['monitoring','reporting','verification'].forEach(function(p){
+      document.getElementById('tab-'+p).classList.toggle('active', p===name);
+      document.getElementById('nav'+p.charAt(0).toUpperCase()+p.slice(1)).classList.toggle('active', p===name);
+    });
+  }
+  function enterApp(){ document.getElementById('landing').style.display='none'; document.getElementById('app').style.display='block'; }
+  function backToLanding(){ document.getElementById('app').style.display='none'; document.getElementById('landing').style.display='flex'; }
+
+  // ---------------- svg rendering ----------------
+  var svgNS="http://www.w3.org/2000/svg";
+  function el(tag,attrs){ var e=document.createElementNS(svgNS,tag); for(var k in attrs) e.setAttribute(k,attrs[k]); return e; }
+  function fmt(n){ return Math.round(n).toLocaleString('id-ID'); }
+  function badge(svg,x,y,w,h,value,label){
+    var g=el('g',{class:'badge'});
+    g.appendChild(el('rect',{x:x,y:y,width:w,height:h}));
+    var val=el('text',{x:x+w/2,y:y+h/2-3,'text-anchor':'middle','dominant-baseline':'central',class:'val'}); val.textContent=fmt(value); g.appendChild(val);
+    var lbl=el('text',{x:x+w/2,y:y+h-6,'text-anchor':'middle',class:'lbl'}); lbl.textContent=label; g.appendChild(lbl);
+    svg.appendChild(g);
+  }
+  function miniTrain(svg, yOff, label, cin, cout, activeBed){
+    var aActive = activeBed==='A';
+    badge(svg, 10, yOff, 78, 40, cin, label+' masuk');
+    svg.appendChild(el('path',{class:'pipe', d:'M88,'+(yOff+20)+' L120,'+(yOff+20)}));
+    // twin bed box
+    svg.appendChild(el('rect',{x:120,y:yOff,width:70,height:40,rx:6, fill: aActive?'rgba(16,163,101,0.10)':'var(--panel-2)', stroke: aActive?'var(--teal)':'var(--line)', 'stroke-width':1.4}));
+    var at=el('text',{x:150,y:yOff+16,'text-anchor':'middle',class:'valve-lbl', fill: aActive?'var(--teal)':'var(--text-dim)'}); at.textContent='Bed A'; svg.appendChild(at);
+    svg.appendChild(el('rect',{x:200,y:yOff,width:70,height:40,rx:6, fill: !aActive?'rgba(16,163,101,0.10)':'var(--panel-2)', stroke: !aActive?'var(--teal)':'var(--line)', 'stroke-width':1.4}));
+    var bt=el('text',{x:230,y:yOff+16,'text-anchor':'middle',class:'valve-lbl', fill: !aActive?'var(--teal)':'var(--text-dim)'}); bt.textContent='Bed B'; svg.appendChild(bt);
+    var actT=el('text',{x:150,y:yOff+30,'text-anchor':'middle',style:'font-size:7.5px;fill:var(--text-dim);'}); actT.textContent = aActive?'aktif':'siaga'; svg.appendChild(actT);
+    var actT2=el('text',{x:230,y:yOff+30,'text-anchor':'middle',style:'font-size:7.5px;fill:var(--text-dim);'}); actT2.textContent = !aActive?'aktif':'siaga'; svg.appendChild(actT2);
+    svg.appendChild(el('path',{class:'pipe', d:'M270,'+(yOff+20)+' L300,'+(yOff+20)}));
+    badge(svg, 300, yOff, 78, 40, cout, label+' keluar');
+    svg.appendChild(el('path',{class:'pipe', d:'M378,'+(yOff+20)+' L420,'+(yOff+20)+' L420,140'}));
+  }
+  function drawSchematic(latest){
+    var svg=document.getElementById('schemSvg'); svg.innerHTML='';
+    miniTrain(svg, 40, 'T1', latest.t1in, latest.t1out, latest.t1bed);
+    miniTrain(svg, 200, 'T2', latest.t2in, latest.t2out, latest.t2bed);
+    svg.appendChild(el('rect',{x:440,y:110,width:130,height:60,rx:8, fill:'var(--panel-2)', stroke:'var(--blue)', 'stroke-width':1.4}));
+    var st=el('text',{x:505,y:135,'text-anchor':'middle','dominant-baseline':'central',style:'font-size:10px;fill:var(--blue);font-weight:600;'}); st.textContent='Tangki bersama'; svg.appendChild(st);
+    var st2=el('text',{x:505,y:150,'text-anchor':'middle',style:'font-size:8px;fill:var(--text-dim);'}); st2.textContent='Modul 5 — penyimpanan CO2'; svg.appendChild(st2);
+  }
+
+  function drawChart(){
+    var svg=document.getElementById('chartSvg'); svg.innerHTML='';
+    if(history.length<2) return;
+    var W=1100,H=240,padL=50,padR=10,padT=14,padB=24;
+    var plotW=W-padL-padR, plotH=H-padT-padB;
+    var totals = history.map(function(d){ return {cin:d.t1in+d.t2in, cout:d.t1out+d.t2out}; });
+    var allVals=[]; totals.forEach(function(d){ allVals.push(d.cin,d.cout); });
+    var maxV=Math.max.apply(null,allVals)*1.08, minV=0;
+    function xAt(i){ return padL+(i/Math.max(1,history.length-1))*plotW; }
+    function yAt(v){ return padT+plotH-((v-minV)/(maxV-minV))*plotH; }
+    for(var g=0; g<=4; g++){
+      var gy=padT+(g/4)*plotH;
+      svg.appendChild(el('line',{x1:padL,x2:W-padR,y1:gy,y2:gy,stroke:'var(--line-soft)','stroke-width':1}));
+      var lab=el('text',{x:padL-8,y:gy+3,'text-anchor':'end',style:'font-size:10px;fill:var(--text-dim)'}); lab.textContent=Math.round(maxV-(g/4)*(maxV-minV)); svg.appendChild(lab);
+    }
+    function pathFor(key){ return totals.map(function(pt,idx){ var x=xAt(idx),y=yAt(pt[key]); return (idx===0?'M':'L')+x.toFixed(1)+','+y.toFixed(1); }).join(' '); }
+    svg.appendChild(el('path',{d:pathFor('cin'), stroke:'var(--red)','stroke-width':2, fill:'none'}));
+    svg.appendChild(el('path',{d:pathFor('cout'), stroke:'var(--teal)','stroke-width':2.4, fill:'none'}));
+    svg.appendChild(el('line',{x1:padL,x2:W-padR,y1:H-padB,y2:H-padB,stroke:'var(--line)'}));
+  }
+
+  function simpleHash(str){
+    var h=0;
+    for(var i=0;i<str.length;i++){ h=((h<<5)-h+str.charCodeAt(i))|0; }
+    return (h>>>0).toString(16).padStart(8,'0');
+  }
+
+  function updateMonitoring(latest, totalRateKgH){
+    document.getElementById('sysRate').innerHTML = totalRateKgH.toFixed(1)+'<span class="unit">kg/jam</span>';
+    var effSys = (1 - (latest.t1out+latest.t2out)/(latest.t1in+latest.t2in))*100;
+    document.getElementById('sysEff').innerHTML = effSys.toFixed(1)+'<span class="unit">%</span>';
+    document.getElementById('sysEffBar').style.width = Math.max(0,Math.min(100,effSys)).toFixed(1)+'%';
+    document.getElementById('sysCum').innerHTML = cumulativeKg.toFixed(2)+'<span class="unit">kg</span>';
+
+    document.getElementById('t1BedTag').innerHTML = '<span class="pill bed '+latest.t1bed+'">BED '+latest.t1bed+'1</span>';
+    document.getElementById('t1in').innerHTML = fmt(latest.t1in)+'<span class="unit">ppm</span>';
+    document.getElementById('t1out').innerHTML = fmt(latest.t1out)+'<span class="unit">ppm</span>';
+    document.getElementById('t1eff').innerHTML = ((1-latest.t1out/latest.t1in)*100).toFixed(1)+'<span class="unit">%</span>';
+
+    document.getElementById('t2BedTag').innerHTML = '<span class="pill bed '+latest.t2bed+'">BED '+latest.t2bed+'2</span>';
+    document.getElementById('t2in').innerHTML = fmt(latest.t2in)+'<span class="unit">ppm</span>';
+    document.getElementById('t2out').innerHTML = fmt(latest.t2out)+'<span class="unit">ppm</span>';
+    document.getElementById('t2eff').innerHTML = ((1-latest.t2out/latest.t2in)*100).toFixed(1)+'<span class="unit">%</span>';
+
+    var tankPct = Math.min(100, (cumulativeKg % TANK_CAPACITY_KG) / TANK_CAPACITY_KG * 100);
+    document.getElementById('tankLevel').innerHTML = tankPct.toFixed(1)+'<span class="unit">%</span>';
+    document.getElementById('tankBar').style.width = tankPct.toFixed(1)+'%';
+    document.getElementById('tankPressure').innerHTML = (tankPct/100*20).toFixed(1)+'<span class="unit">bar</span>';
+    var remainingKg = TANK_CAPACITY_KG - (cumulativeKg % TANK_CAPACITY_KG);
+    var etaH = totalRateKgH>0 ? remainingKg/totalRateKgH : 0;
+    document.getElementById('tankEta').innerHTML = etaH.toFixed(1)+'<span class="unit">jam</span>';
+  }
+
+  function updateLog(){
+    var body=document.getElementById('logBody'); body.innerHTML='';
+    history.slice(-10).reverse().forEach(function(d){
+      var totalIn=d.t1in+d.t2in, totalOut=d.t1out+d.t2out;
+      var eff=(1-totalOut/totalIn)*100;
+      var timeStr = d.time ? new Date(d.time).toLocaleTimeString('id-ID') : '—';
+      var row=document.createElement('tr');
+      row.innerHTML='<td>'+timeStr+'</td><td><span class="pill bed '+d.t1bed+'">'+d.t1bed+'1</span>'+(d.switched1?' ⇄':'')+'</td><td><span class="pill bed '+d.t2bed+'">'+d.t2bed+'2</span>'+(d.switched2?' ⇄':'')+'</td><td class="num">'+fmt(totalIn)+'</td><td class="num">'+fmt(totalOut)+'</td><td class="num">'+eff.toFixed(1)+'%</td>';
+      body.appendChild(row);
+    });
+  }
+
+  function updateReporting(){
+    document.getElementById('repCum').innerHTML = cumulativeKg.toFixed(2)+'<span class="unit">kg</span>';
+    var latest = history[history.length-1];
+    var effSys = (1-(latest.t1out+latest.t2out)/(latest.t1in+latest.t2in))*100;
+    document.getElementById('repEff').innerHTML = effSys.toFixed(1)+'<span class="unit">%</span>';
+    var currentRateKgH = Math.max(0,(latest.t1in-latest.t1out))*1e-6*FLOW_PER_TRAIN*CO2_DENSITY + Math.max(0,(latest.t2in-latest.t2out))*1e-6*FLOW_PER_TRAIN*CO2_DENSITY;
+    var annualTon = currentRateKgH * ANNUAL_HOURS / 1000;
+    document.getElementById('repAnnual').innerHTML = annualTon.toFixed(0)+'<span class="unit">ton/thn</span>';
+    document.getElementById('repTaxValue').textContent = 'Rp '+Math.round(annualTon*TAX_PRICE).toLocaleString('id-ID');
+    document.getElementById('repMarketValue').textContent = 'Rp '+Math.round(annualTon*MARKET_PRICE).toLocaleString('id-ID');
+  }
+
+  function updateVerification(latest){
+    var vBody=document.getElementById('verifyBody'); vBody.innerHTML='';
+    var points=[
+      {name:'Train 1 - masuk', primary:latest.t1in},
+      {name:'Train 1 - keluar', primary:latest.t1out},
+      {name:'Train 2 - masuk', primary:latest.t2in},
+      {name:'Train 2 - keluar', primary:latest.t2out}
+    ];
+    points.forEach(function(p){
+      var redundant = p.primary * (1 + (Math.random()-0.5)*0.03); // simulasi ±1.5%
+      var dev = Math.abs(redundant-p.primary)/p.primary*100;
+      var status = dev < 3 ? '<span class="pill ok">Sesuai</span>' : '<span class="pill warn">Perlu cek</span>';
+      var row=document.createElement('tr');
+      row.innerHTML='<td>'+p.name+'</td><td class="num">'+fmt(p.primary)+' ppm</td><td class="num">'+fmt(redundant)+' ppm</td><td class="num">'+dev.toFixed(2)+'%</td><td>'+status+'</td>';
+      vBody.appendChild(row);
+    });
+
+    var aBody=document.getElementById('auditBody'); aBody.innerHTML='';
+    history.slice(-10).reverse().forEach(function(d){
+      var hashInput = d.time+'|'+d.t1in.toFixed(0)+'|'+d.t1out.toFixed(0)+'|'+d.t2in.toFixed(0)+'|'+d.t2out.toFixed(0);
+      var id = simpleHash(hashInput);
+      var timeStr = d.time ? new Date(d.time).toLocaleTimeString('id-ID') : '—';
+      var row=document.createElement('tr');
+      row.innerHTML='<td>'+timeStr+'</td><td class="num">#'+id+'</td><td><span class="pill bed '+d.t1bed+'">'+d.t1bed+'1</span></td><td><span class="pill bed '+d.t2bed+'">'+d.t2bed+'2</span></td><td><span class="pill ok">Terverifikasi</span></td>';
+      aBody.appendChild(row);
+    });
+  }
+
+  function renderAll(totalRateKgH){
+    if(history.length===0) return;
+    var latest=history[history.length-1];
+    drawSchematic(latest);
+    drawChart();
+    updateMonitoring(latest, totalRateKgH);
+    updateLog();
+    updateReporting();
+    updateVerification(latest);
+  }
+
+  window.setMode=setMode; window.addManualPoint=addManualPoint; window.applyConfig=applyConfig;
+  window.showPage=showPage; window.enterApp=enterApp; window.backToLanding=backToLanding;
+  setMode('demo');
+})();
+</script>
+-e 
+</body>
+</html>
